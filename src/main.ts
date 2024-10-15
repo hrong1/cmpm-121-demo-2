@@ -1,10 +1,15 @@
 import "./style.css";
 
-const APP_NAME = "D2";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
-// const canvas = document.getElementById("canvas");
-//const ctx = canvas.getContext("2d");
+document.title = "Sticky Pad";
+const header = document.createElement("h1");
+header.innerHTML = "Sticky Pad";
+app.append(header);
 
-document.title = APP_NAME;
-app.innerHTML = APP_NAME;
+const canvas = document.createElement("canvas");
+canvas.width = 256;
+canvas.height = 256;
+app.append(canvas);
+
+
