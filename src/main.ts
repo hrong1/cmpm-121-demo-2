@@ -42,12 +42,18 @@ canvas.addEventListener("mouseout", () => {
     cursor.active = false;
 });
 
-
+const Text = document.createElement("div");
+Text.innerHTML = "<br/>" + "";
+app.append(Text);
 const clearButton = document.createElement("button");
 clearButton.innerHTML = "clear";
+clearButton.style.top = "100px";
+clearButton.style.left = "10%";;
 app.append(clearButton);
 clearButton.addEventListener("click", () => {
     ctx?.clearRect(0, 0, canvas.width, canvas.height);
 });
+
+
 
 
