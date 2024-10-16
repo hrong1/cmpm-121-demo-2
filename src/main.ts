@@ -80,9 +80,9 @@ clearButton.innerHTML = "clear";
 app.append(clearButton);
 clearButton.addEventListener("click", () => {
     ctx?.clearRect(0, 0, canvas.width, canvas.height);
-    canvas.dispatchEvent(new Event("drawing-changed"));
     lines = [];
     redoline = [];
+    canvas.dispatchEvent(new Event("drawing-changed"));
 });
 
 // undo button
