@@ -1,5 +1,5 @@
 import "./style.css";
-
+ 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
 document.title = "Sticky Pad";
