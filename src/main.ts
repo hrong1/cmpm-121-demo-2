@@ -15,14 +15,33 @@ app.append(canvas);
 
 const ctx = canvas.getContext("2d");
 
-interface Point {
-    x: number;
-    y: number;
-}
+class MarkerLine {
+    private points: { x: number, y: number }[] = [];
   
-let lines: Point[][] = [];
-let currentline: Point[] = [];
-let redoline: Point[][] = [];
+    constructor(initialX: number, initialY: number) {
+      this.points.push({ x: initialX, y: initialY });
+    }
+  
+    drag(x: number, y: number): void {
+      this.points.push({ x, y });
+    }
+  
+    display(ctx: CanvasRenderingContext2D): void {
+      ctx.beginPath();
+      if (this.points.length === 1) {
+        const { x, y } = this.points[0];
+        ctx.arc(x, y, 1, 0, Math.PI);
+        ctx.fill();
+      } else if (this.points.length > 1) {
+        ctx.moveTo(this.points[0].x, this.points[0].y);
+        for (let i = 1; i < this.points.length; i++) {
+          ctx.lineTo(this.points[i].x, this.points[i].y);
+        }
+        ctx.stroke();
+      }
+      ctx.closePath();
+    }
+  }
 
 canvas.addEventListener("mousedown", start);
 canvas.addEventListener("mousemove", draw);
@@ -30,26 +49,32 @@ document.addEventListener("mouseup", stopdraw);
 canvas.addEventListener("drawing-changed", redraw);
 
 const cursor = { active: false, x: 0, y: 0 };
+let lines: Array<MarkerLine> = [];
+let redoline: Array<MarkerLine> = [];
+let currentline: MarkerLine | null = null;
 
 function start(e: MouseEvent) {
     cursor.active = true;
+    currentline = new MarkerLine(e.offsetX, e.offsetY);
+    if (ctx){
+        currentline.display(ctx);
+    }
     redoline = [];
-    currentline = [{ x: e.offsetX, y: e.offsetY }];
 }
 
 function draw(e: MouseEvent) {
-    if (cursor.active) {
-        const newX = e.offsetX;
-        const newY = e.offsetY;
-        currentline.push({ x: newX, y: newY });
-        canvas.dispatchEvent(new Event("drawing-changed"));
+    if (cursor.active && currentline) {
+        currentline.drag(e.offsetX, e.offsetY);
+        if (ctx){
+            currentline.display(ctx);
+        }
     }
 }
 
 function stopdraw(e: MouseEvent) {
-    if (cursor.active) {
+    if (cursor.active && currentline) {
         lines.push(currentline);
-        currentline = [];
+        currentline = null;
         cursor.active = false;
         canvas.dispatchEvent(new Event("drawing-changed"));
     }
@@ -57,17 +82,10 @@ function stopdraw(e: MouseEvent) {
 
 function redraw() {
     if (!ctx) return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        lines.forEach(line => {
-            for (let i: number = 1; i < line.length; i++) {
-                ctx.beginPath();
-                ctx.moveTo(line[i - 1].x, line[i - 1].y);
-                ctx.lineTo(line[i].x, line[i].y);
-                ctx.stroke();
-                ctx.closePath();
-            }
-
-        });
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    lines.forEach(line => {
+        line.display(ctx);
+    });
 }
 
 const Text = document.createElement("div");
@@ -79,10 +97,11 @@ const clearButton = document.createElement("button");
 clearButton.innerHTML = "clear";
 app.append(clearButton);
 clearButton.addEventListener("click", () => {
-    ctx?.clearRect(0, 0, canvas.width, canvas.height);
-    lines = [];
-    redoline = [];
-    canvas.dispatchEvent(new Event("drawing-changed"));
+    if (ctx){
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        lines = [];
+        redoline = [];
+    }
 });
 
 // undo button
@@ -108,7 +127,3 @@ redoButton.addEventListener("click", () => {
         canvas.dispatchEvent(new Event("drawing-changed"));
     }
 });
-
-
-
-
