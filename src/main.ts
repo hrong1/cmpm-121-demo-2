@@ -14,12 +14,18 @@ canvas.height = 256;
 app.append(canvas);
 
 const ctx = canvas.getContext("2d");
+const cursor = { active: false, x: 0, y: 0 };
+let lines: Array<MarkerLine> = [];
+let redoline: Array<MarkerLine> = [];
+let currentline: MarkerLine | null = null;
+let linewidth: number = 1;
 
 class MarkerLine {
     private points: { x: number, y: number }[] = [];
-  
-    constructor(initialX: number, initialY: number) {
+    private thickness: number;
+    constructor(initialX: number, initialY: number, thickness: number) {
       this.points.push({ x: initialX, y: initialY });
+      this.thickness = thickness;
     }
   
     drag(x: number, y: number): void {
@@ -28,6 +34,7 @@ class MarkerLine {
   
     display(ctx: CanvasRenderingContext2D): void {
       ctx.beginPath();
+      ctx.lineWidth = this.thickness;
       if (this.points.length === 1) {
         const { x, y } = this.points[0];
         ctx.arc(x, y, 1, 0, Math.PI);
@@ -48,14 +55,9 @@ canvas.addEventListener("mousemove", draw);
 document.addEventListener("mouseup", stopdraw);
 canvas.addEventListener("drawing-changed", redraw);
 
-const cursor = { active: false, x: 0, y: 0 };
-let lines: Array<MarkerLine> = [];
-let redoline: Array<MarkerLine> = [];
-let currentline: MarkerLine | null = null;
-
 function start(e: MouseEvent) {
     cursor.active = true;
-    currentline = new MarkerLine(e.offsetX, e.offsetY);
+    currentline = new MarkerLine(e.offsetX, e.offsetY, linewidth);
     if (ctx){
         currentline.display(ctx);
     }
@@ -127,3 +129,46 @@ redoButton.addEventListener("click", () => {
         canvas.dispatchEvent(new Event("drawing-changed"));
     }
 });
+
+const widthnum = document.createElement("div");
+widthnum.innerHTML = "<br/>" + "Linewidth: " + `${linewidth}`;
+app.append(widthnum);
+
+//thin button
+const thinButton = document.createElement("button");
+thinButton.innerHTML = "-";
+app.append(thinButton);
+thinButton.addEventListener("click", () => {
+    if (linewidth > 1){
+        linewidth -= 1;
+        widthnum.innerHTML = "<br/>" + "Linewidth: " + `${linewidth}`;
+    }
+});
+
+//thick button
+const thickButton = document.createElement("button");
+thickButton.innerHTML = "+";
+app.append(thickButton);
+thickButton.addEventListener("click", () => {
+    if (linewidth < 5 ){
+        linewidth += 1;
+        widthnum.innerHTML = "<br/>" + "Linewidth: " + `${linewidth}`;
+    }
+});
+
+
+
+// const slider = document.createElement("input");
+// slider.type = "range";
+// slider.min = "0";
+// slider.max = "100";
+// slider.value = "10";
+// const value = document.createElement("div");
+// value.innerHTML = slider.value;
+// slider.addEventListener("input", () => {
+//     value.innerHTML = slider.value;
+//     var num: number = +slider.value;
+//     linewidth = num / 10;
+// });
+// app.appendChild(slider);
+// app.append(value);
