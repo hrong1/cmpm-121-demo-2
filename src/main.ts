@@ -19,7 +19,9 @@ let lines: Array<MarkerLine> = [];
 let redoline: Array<MarkerLine> = [];
 let currentline: MarkerLine | null = null;
 let toolPreview: ToolPreview | null = null;
+let stickerPreview: StickerPreview | null = null;
 let linewidth: number = 1;
+let currentSticker: string | null = null;
 
 class MarkerLine {
     private points: { x: number, y: number }[] = [];
@@ -75,6 +77,49 @@ class ToolPreview {
     }
 }
 
+class Sticker {
+    private x: number;
+    private y: number;
+    private content: string;
+  
+    constructor(x: number, y: number, content: string) {
+      this.x = x;
+      this.y = y;
+      this.content = content;
+    }
+  
+    drag(x: number, y: number) {
+      this.x = x;
+      this.y = y;
+    }
+  
+    display(ctx: CanvasRenderingContext2D) {
+      ctx.font = "24px Arial";
+      ctx.fillText(this.content, this.x, this.y);
+    }
+}
+
+class StickerPreview {
+    private x: number;
+    private y: number;
+    private content: string;
+  
+    constructor(x: number, y: number, content: string) {
+      this.x = x;
+      this.y = y;
+      this.content = content;
+    }
+  
+    updatePosition(x: number, y: number) {
+      this.x = x;
+      this.y = y;
+    }
+  
+    display(ctx: CanvasRenderingContext2D) {
+      ctx.font = "24px Arial";
+      ctx.fillText(this.content, this.x, this.y);
+    }
+}
 
 canvas.addEventListener("mousedown", start);
 canvas.addEventListener("mousemove", draw);
@@ -82,11 +127,17 @@ document.addEventListener("mouseup", stopdraw);
 canvas.addEventListener("drawing-changed", redraw);
 
 function start(e: MouseEvent) {
-    cursor.active = true;
-    currentline = new MarkerLine(e.offsetX, e.offsetY, linewidth);
-    if (ctx){
-        currentline.display(ctx);
-    }
+    if (currentSticker) {
+        const sticker = new Sticker(e.offsetX, e.offsetY, currentSticker);
+        lines.push(sticker as unknown as MarkerLine);
+        canvas.dispatchEvent(new Event("drawing-changed"));
+    } else {
+        cursor.active = true;
+        currentline = new MarkerLine(e.offsetX, e.offsetY, linewidth);
+        if (ctx){
+            currentline.display(ctx);
+        }
+      }
     redoline = [];
 }
 
@@ -97,16 +148,24 @@ function draw(e: MouseEvent) {
             currentline.display(ctx);
         }
     } else {
-        if (!toolPreview) {
-            toolPreview = new ToolPreview(e.offsetX, e.offsetY);
+        if (currentSticker) {
+            redraw();
+            stickerPreview = new StickerPreview(e.offsetX, e.offsetY, currentSticker);
+            stickerPreview.display(ctx!);
         } else {
-            toolPreview.updatePosition(e.offsetX, e.offsetY);
+            if (!toolPreview) {
+              toolPreview = new ToolPreview(e.offsetX, e.offsetY);
+            } else {
+              toolPreview.updatePosition(e.offsetX, e.offsetY);
+            }
+            if (!cursor.active && toolPreview) {
+                toolPreview.display(ctx!);
+            }
         }
-        if (!cursor.active && toolPreview) {
-            toolPreview.display(ctx!);
-          }
     }
 }
+
+
 
 function stopdraw(e: MouseEvent) {
     if (cursor.active && currentline) {
@@ -165,6 +224,30 @@ redoButton.addEventListener("click", () => {
     }
 });
 
+const sticker1Button = document.createElement("button");
+sticker1Button.textContent = "🌟";
+app.append(sticker1Button);
+const sticker2Button = document.createElement("button");
+sticker2Button.textContent = "✨";
+app.append(sticker2Button);
+const sticker3Button = document.createElement("button");
+sticker3Button.textContent = "🔥";
+app.append(sticker3Button);
+
+sticker1Button.addEventListener("click", () => {
+    currentSticker = "🌟";
+    redraw();
+});
+sticker2Button.addEventListener("click", () => {
+    currentSticker = "✨";
+    redraw();
+});
+sticker3Button.addEventListener("click", () => {
+    currentSticker = "🔥";
+    redraw();
+});
+
+
 const widthnum = document.createElement("div");
 widthnum.innerHTML = "<br/>" + "Linewidth: " + `${linewidth}`;
 app.append(widthnum);
@@ -174,6 +257,8 @@ const thinButton = document.createElement("button");
 thinButton.innerHTML = "-";
 app.append(thinButton);
 thinButton.addEventListener("click", () => {
+    currentSticker = null;
+    redraw();
     if (linewidth > 1){
         linewidth -= 1;
         widthnum.innerHTML = "<br/>" + "Linewidth: " + `${linewidth}`;
@@ -185,6 +270,8 @@ const thickButton = document.createElement("button");
 thickButton.innerHTML = "+";
 app.append(thickButton);
 thickButton.addEventListener("click", () => {
+    currentSticker = null;
+    redraw();
     if (linewidth < 5 ){
         linewidth += 1;
         widthnum.innerHTML = "<br/>" + "Linewidth: " + `${linewidth}`;
