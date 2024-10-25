@@ -18,11 +18,13 @@ const cursor = { active: false, x: 0, y: 0 };
 let lines: Array<MarkerLine> = [];
 let redoline: Array<MarkerLine> = [];
 let currentline: MarkerLine | null = null;
+let toolPreview: ToolPreview | null = null;
 let linewidth: number = 1;
 
 class MarkerLine {
     private points: { x: number, y: number }[] = [];
     private thickness: number;
+
     constructor(initialX: number, initialY: number, thickness: number) {
       this.points.push({ x: initialX, y: initialY });
       this.thickness = thickness;
@@ -37,7 +39,7 @@ class MarkerLine {
       ctx.lineWidth = this.thickness;
       if (this.points.length === 1) {
         const { x, y } = this.points[0];
-        ctx.arc(x, y, 1, 0, Math.PI);
+        ctx.arc(x, y, 1, 0, Math.PI / 2);
         ctx.fill();
       } else if (this.points.length > 1) {
         ctx.moveTo(this.points[0].x, this.points[0].y);
@@ -49,6 +51,30 @@ class MarkerLine {
       ctx.closePath();
     }
   }
+
+class ToolPreview {
+    private x: number;
+    private y: number;
+
+    constructor(x: number, y: number) {
+      this.x = x;
+      this.y = y;
+    }
+  
+    updatePosition(x: number, y: number) {
+      this.x = x;
+      this.y = y;
+    }
+  
+    display(ctx: CanvasRenderingContext2D) {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, linewidth / 2, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fill()
+      ctx.closePath();
+    }
+}
+
 
 canvas.addEventListener("mousedown", start);
 canvas.addEventListener("mousemove", draw);
@@ -70,6 +96,15 @@ function draw(e: MouseEvent) {
         if (ctx){
             currentline.display(ctx);
         }
+    } else {
+        if (!toolPreview) {
+            toolPreview = new ToolPreview(e.offsetX, e.offsetY);
+        } else {
+            toolPreview.updatePosition(e.offsetX, e.offsetY);
+        }
+        if (!cursor.active && toolPreview) {
+            toolPreview.display(ctx!);
+          }
     }
 }
 
@@ -167,8 +202,4 @@ thickButton.addEventListener("click", () => {
 // value.innerHTML = slider.value;
 // slider.addEventListener("input", () => {
 //     value.innerHTML = slider.value;
-//     var num: number = +slider.value;
-//     linewidth = num / 10;
-// });
-// app.appendChild(slider);
-// app.append(value);
+//     var
