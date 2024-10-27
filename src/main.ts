@@ -22,6 +22,7 @@ let toolPreview: ToolPreview | null = null;
 let stickerPreview: StickerPreview | null = null;
 let linewidth: number = 1;
 let currentSticker: string | null = null;
+let Stickerarray:string[] = ["🌟", "✨", "🔥"]
 
 class MarkerLine {
     private points: { x: number, y: number }[] = [];
@@ -124,9 +125,11 @@ class StickerPreview {
 canvas.addEventListener("mousedown", start);
 canvas.addEventListener("mousemove", draw);
 document.addEventListener("mouseup", stopdraw);
+canvas.addEventListener("mouseout", redraw);
 canvas.addEventListener("drawing-changed", redraw);
 
 function start(e: MouseEvent) {
+    redraw();
     if (currentSticker) {
         const sticker = new Sticker(e.offsetX, e.offsetY, currentSticker);
         lines.push(sticker as unknown as MarkerLine);
@@ -224,30 +227,6 @@ redoButton.addEventListener("click", () => {
     }
 });
 
-const sticker1Button = document.createElement("button");
-sticker1Button.textContent = "🌟";
-app.append(sticker1Button);
-const sticker2Button = document.createElement("button");
-sticker2Button.textContent = "✨";
-app.append(sticker2Button);
-const sticker3Button = document.createElement("button");
-sticker3Button.textContent = "🔥";
-app.append(sticker3Button);
-
-sticker1Button.addEventListener("click", () => {
-    currentSticker = "🌟";
-    redraw();
-});
-sticker2Button.addEventListener("click", () => {
-    currentSticker = "✨";
-    redraw();
-});
-sticker3Button.addEventListener("click", () => {
-    currentSticker = "🔥";
-    redraw();
-});
-
-
 const widthnum = document.createElement("div");
 widthnum.innerHTML = "<br/>" + "Linewidth: " + `${linewidth}`;
 app.append(widthnum);
@@ -278,6 +257,45 @@ thickButton.addEventListener("click", () => {
     }
 });
 
+const newText = document.createElement("div");
+newText.innerHTML = "";
+app.append(newText);
+
+// button cantainer for sticker
+const container = document.createElement('button-container');
+function addstickerButton() {
+    if (container){
+        container.innerHTML = '';
+    }
+    Stickerarray.forEach((sticker) => {
+        const StickerButton = document.createElement("button");
+        StickerButton.innerHTML = sticker;
+        StickerButton.addEventListener("click", () => {
+            currentSticker = sticker;
+            redraw();
+        });
+        if (container){
+            container.appendChild(StickerButton);
+        }
+    });
+}
+addstickerButton();
+app.append(container);
+
+const addsticker = document.createElement("button");
+addsticker.innerHTML = "+";
+app.append(addsticker);
+addsticker.addEventListener("click", () => {
+    let newsticker = prompt("Please enter your new sticker");
+    if (newsticker != null && Stickerarray.includes(newsticker.trim())){        // check sticker exists or not
+        alert("Sticker exists! Please enter another sticker");     
+    }else if (newsticker != null && newsticker.trim() !== "") {         // push sticker into array and update button
+        Stickerarray.push(newsticker);
+        addstickerButton();
+    } else{         // send error message
+        alert("Input is empty! Please enter it again");
+    }
+});
 
 
 // const slider = document.createElement("input");
