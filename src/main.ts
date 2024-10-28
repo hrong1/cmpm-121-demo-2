@@ -20,9 +20,9 @@ let redoline: Array<MarkerLine> = [];
 let currentline: MarkerLine | null = null;
 let toolPreview: ToolPreview | null = null;
 let stickerPreview: StickerPreview | null = null;
-let linewidth: number = 1;
+let linewidth: number = 2;
 let currentSticker: string | null = null;
-let Stickerarray:string[] = ["🌟", "✨", "🔥"]
+let Stickerarray: string[] = ["🌟", "✨", "🔥"]
 
 class MarkerLine {
     private points: { x: number, y: number }[] = [];
@@ -42,7 +42,7 @@ class MarkerLine {
       ctx.lineWidth = this.thickness;
       if (this.points.length === 1) {
         const { x, y } = this.points[0];
-        ctx.arc(x, y, 1, 0, Math.PI / 2);
+        ctx.arc(x, y, linewidth / 2, 0, Math.PI * 2);
         ctx.fill();
       } else if (this.points.length > 1) {
         ctx.moveTo(this.points[0].x, this.points[0].y);
@@ -72,8 +72,7 @@ class ToolPreview {
     display(ctx: CanvasRenderingContext2D) {
       ctx.beginPath();
       ctx.arc(this.x, this.y, linewidth / 2, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.fill()
+      ctx.fill();
       ctx.closePath();
     }
 }
@@ -84,19 +83,19 @@ class Sticker {
     private content: string;
   
     constructor(x: number, y: number, content: string) {
-      this.x = x;
-      this.y = y;
-      this.content = content;
+        this.x = x;
+        this.y = y;
+        this.content = content;
     }
   
     drag(x: number, y: number) {
-      this.x = x;
-      this.y = y;
+        this.x = x;
+        this.y = y;
     }
   
     display(ctx: CanvasRenderingContext2D) {
-      ctx.font = "24px Arial";
-      ctx.fillText(this.content, this.x, this.y);
+        ctx.font = "30px Arial";
+        ctx.fillText(this.content, this.x, this.y);
     }
 }
 
@@ -106,19 +105,19 @@ class StickerPreview {
     private content: string;
   
     constructor(x: number, y: number, content: string) {
-      this.x = x;
-      this.y = y;
-      this.content = content;
+        this.x = x;
+        this.y = y;
+        this.content = content;
     }
   
-    updatePosition(x: number, y: number) {
-      this.x = x;
-      this.y = y;
-    }
+    // updatePosition(x: number, y: number) {
+    //     this.x = x;
+    //     this.y = y;
+    // }
   
     display(ctx: CanvasRenderingContext2D) {
-      ctx.font = "24px Arial";
-      ctx.fillText(this.content, this.x, this.y);
+        ctx.font = "30px Arial";
+        ctx.fillText(this.content, this.x, this.y);
     }
 }
 
@@ -127,6 +126,23 @@ canvas.addEventListener("mousemove", draw);
 document.addEventListener("mouseup", stopdraw);
 canvas.addEventListener("mouseout", redraw);
 canvas.addEventListener("drawing-changed", redraw);
+canvas.addEventListener("mouseout", enablecursor);
+canvas.addEventListener("mousemove", unablecursor);
+
+
+// diplay cursor when mouse out canvas
+function enablecursor(e: MouseEvent){
+    document.body.style.cursor = "auto";
+}
+
+// hide cursor when mouse in canvas
+function unablecursor(e: MouseEvent){
+    document.body.style.cursor = "none";
+    if (e.offsetX >= 0 && e.offsetX <= canvas.width && e.offsetY >= 0 && e.offsetY <= canvas.height) {
+        document.body.style.cursor = "none";
+      }
+}
+
 
 function start(e: MouseEvent) {
     redraw();
@@ -156,14 +172,9 @@ function draw(e: MouseEvent) {
             stickerPreview = new StickerPreview(e.offsetX, e.offsetY, currentSticker);
             stickerPreview.display(ctx!);
         } else {
-            if (!toolPreview) {
-              toolPreview = new ToolPreview(e.offsetX, e.offsetY);
-            } else {
-              toolPreview.updatePosition(e.offsetX, e.offsetY);
-            }
-            if (!cursor.active && toolPreview) {
-                toolPreview.display(ctx!);
-            }
+            redraw();
+            toolPreview = new ToolPreview(e.offsetX, e.offsetY);
+            toolPreview.display(ctx!);
         }
     }
 }
@@ -315,7 +326,7 @@ addsticker.addEventListener("click", () => {
         alert("Sticker exists! Please enter another sticker");     
     }else if (newsticker != null && newsticker.trim() !== "") {         // push sticker into array and update button
         Stickerarray.push(newsticker);
-        addstickerButton();
+        addstickerButton(); // call add sticker function
     } else{         // send error message
         alert("Input is empty! Please enter it again");
     }
