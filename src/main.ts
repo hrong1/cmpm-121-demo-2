@@ -227,8 +227,32 @@ redoButton.addEventListener("click", () => {
     }
 });
 
+// export button
+const exportButton = document.createElement("button");
+exportButton.innerHTML = "export";
+app.append(exportButton);
+exportButton.addEventListener("click", () => {
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = 1024;
+    tempCanvas.height = 1024;
+    const tempCtx = tempCanvas.getContext("2d");
+    if (tempCtx){
+        tempCtx.scale(4, 4);
+        tempCtx.fillStyle = "white";
+        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+        tempCtx.fill();
+        tempCtx.fillStyle = "black";
+        lines.forEach((line) => line.display(tempCtx));
+    }
+    const anchor = document.createElement("a");
+    anchor.href = tempCanvas.toDataURL("image/png");
+    anchor.download = "sketchpad.png";
+    anchor.click();
+
+});
+
 const widthnum = document.createElement("div");
-widthnum.innerHTML = "<br/>" + "Linewidth: " + `${linewidth}`;
+widthnum.innerHTML = "Linewidth: " + `${linewidth}`;
 app.append(widthnum);
 
 //thin button
@@ -240,7 +264,7 @@ thinButton.addEventListener("click", () => {
     redraw();
     if (linewidth > 1){
         linewidth -= 1;
-        widthnum.innerHTML = "<br/>" + "Linewidth: " + `${linewidth}`;
+        widthnum.innerHTML = "Linewidth: " + `${linewidth}`;
     }
 });
 
@@ -251,9 +275,9 @@ app.append(thickButton);
 thickButton.addEventListener("click", () => {
     currentSticker = null;
     redraw();
-    if (linewidth < 5 ){
+    if (linewidth < 10 ){
         linewidth += 1;
-        widthnum.innerHTML = "<br/>" + "Linewidth: " + `${linewidth}`;
+        widthnum.innerHTML = "Linewidth: " + `${linewidth}`;
     }
 });
 
