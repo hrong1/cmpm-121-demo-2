@@ -20,38 +20,42 @@ let redoline: Array<MarkerLine> = [];
 let currentline: MarkerLine | null = null;
 let toolPreview: ToolPreview | null = null;
 let stickerPreview: StickerPreview | null = null;
-let linewidth: number = 2;
+let linewidth: number = 5;
 let currentSticker: string | null = null;
 let Stickerarray: string[] = ["🌟", "✨", "🔥"]
 
 class MarkerLine {
     private points: { x: number, y: number }[] = [];
     private thickness: number;
+    private color: string;
 
-    constructor(initialX: number, initialY: number, thickness: number) {
-      this.points.push({ x: initialX, y: initialY });
-      this.thickness = thickness;
+    constructor(initialX: number, initialY: number, thickness: number, color: string) {
+        this.points.push({ x: initialX, y: initialY });
+        this.thickness = thickness;
+        this.color = color;
     }
   
     drag(x: number, y: number): void {
-      this.points.push({ x, y });
+        this.points.push({ x, y });
     }
   
     display(ctx: CanvasRenderingContext2D): void {
-      ctx.beginPath();
-      ctx.lineWidth = this.thickness;
-      if (this.points.length === 1) {
-        const { x, y } = this.points[0];
-        ctx.arc(x, y, linewidth / 2, 0, Math.PI * 2);
-        ctx.fill();
-      } else if (this.points.length > 1) {
-        ctx.moveTo(this.points[0].x, this.points[0].y);
+        ctx.beginPath();
+        ctx.lineWidth = this.thickness;
+        ctx.fillStyle = this.color;
+        ctx.strokeStyle = this.color;
+        if (this.points.length === 1) {
+            const { x, y } = this.points[0];
+            ctx.arc(x, y, this.thickness / 2, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (this.points.length > 1) {
+            ctx.moveTo(this.points[0].x, this.points[0].y);
         for (let i = 1; i < this.points.length; i++) {
-          ctx.lineTo(this.points[i].x, this.points[i].y);
+            ctx.lineTo(this.points[i].x, this.points[i].y);
         }
         ctx.stroke();
-      }
-      ctx.closePath();
+        }
+        ctx.closePath();
     }
   }
 
@@ -60,20 +64,16 @@ class ToolPreview {
     private y: number;
 
     constructor(x: number, y: number) {
-      this.x = x;
-      this.y = y;
-    }
-  
-    updatePosition(x: number, y: number) {
-      this.x = x;
-      this.y = y;
-    }
+        this.x = x;
+        this.y = y;
+    }  
   
     display(ctx: CanvasRenderingContext2D) {
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, linewidth / 2, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.closePath();
+        ctx.fillStyle = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, linewidth / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.closePath();
     }
 }
 
@@ -108,12 +108,7 @@ class StickerPreview {
         this.x = x;
         this.y = y;
         this.content = content;
-    }
-  
-    // updatePosition(x: number, y: number) {
-    //     this.x = x;
-    //     this.y = y;
-    // }
+    }  
   
     display(ctx: CanvasRenderingContext2D) {
         ctx.font = "30px Arial";
@@ -123,7 +118,8 @@ class StickerPreview {
 
 canvas.addEventListener("mousedown", start);
 canvas.addEventListener("mousemove", draw);
-document.addEventListener("mouseup", stopdraw);
+canvas.addEventListener("mouseup", stopdraw);
+canvas.addEventListener("mouseout", stopdraw);
 canvas.addEventListener("mouseout", redraw);
 canvas.addEventListener("drawing-changed", redraw);
 canvas.addEventListener("mouseout", enablecursor);
@@ -152,7 +148,8 @@ function start(e: MouseEvent) {
         canvas.dispatchEvent(new Event("drawing-changed"));
     } else {
         cursor.active = true;
-        currentline = new MarkerLine(e.offsetX, e.offsetY, linewidth);
+        let color = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        currentline = new MarkerLine(e.offsetX, e.offsetY, linewidth, color);
         if (ctx){
             currentline.display(ctx);
         }
@@ -332,14 +329,39 @@ addsticker.addEventListener("click", () => {
     }
 });
 
+//color value
+let hue: number = 0;
+let saturation: number = 100;
+let lightness: number = 0;
 
-// const slider = document.createElement("input");
-// slider.type = "range";
-// slider.min = "0";
-// slider.max = "100";
-// slider.value = "10";
-// const value = document.createElement("div");
-// value.innerHTML = slider.value;
-// slider.addEventListener("input", () => {
-//     value.innerHTML = slider.value;
-//     var
+const slider = document.createElement("input");
+slider.type = "range";
+slider.min = "0";
+slider.max = "360";
+slider.value = "0";
+slider.addEventListener("input", () => {
+    hue = +slider.value;
+    lightness = 50;
+    colorText.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    currentSticker = null;
+    redraw();
+});
+
+const colorText = document.createElement("button");
+colorText.innerHTML = "Color";
+colorText.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+
+const blackbottom = document.createElement("button");
+blackbottom.innerHTML = "Change Color to Black";
+blackbottom.addEventListener("click", () => {
+    lightness = 0;
+    colorText.style.backgroundColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+});
+
+const blockText = document.createElement("div");
+blockText.innerHTML = "";
+app.append(blockText);
+
+app.append(colorText);
+app.append(slider);
+app.append(blackbottom);
