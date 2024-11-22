@@ -18,10 +18,9 @@ let lines: Array<MarkerLine> = [];
 let redoline: Array<MarkerLine> = [];
 let currentline: MarkerLine | null = null;
 let toolPreview: ToolPreview | null = null;
-let stickerPreview: StickerPreview | null = null;
 let linewidth: number = 5;
 let currentSticker: string | null = null;
-let Stickerarray: string[] = ["🌟", "✨", "🔥"];
+const Stickerarray: string[] = ["🌟", "✨", "🔥"];
 const LINE_WIDTH_LIMITS = { min: 1, max: 10 };
 
 class MarkerLine {
@@ -67,18 +66,25 @@ class MarkerLine {
 class ToolPreview {
   private x: number;
   private y: number;
+  private content: string;
 
-  constructor(x: number, y: number) {
+  constructor(x: number, y: number, content: string) {
     this.x = x;
     this.y = y;
+    this.content = content;
   }
 
   display(ctx: CanvasRenderingContext2D) {
-    ctx.fillStyle = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, linewidth / 2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.closePath();
+    if (this.content !== "") {
+      ctx.font = "30px Arial";
+      ctx.fillText(this.content, this.x, this.y);
+    } else {
+      ctx.fillStyle = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, linewidth / 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.closePath();
+    }
   }
 }
 
@@ -104,23 +110,6 @@ class Sticker {
   }
 }
 
-class StickerPreview {
-  private x: number;
-  private y: number;
-  private content: string;
-
-  constructor(x: number, y: number, content: string) {
-    this.x = x;
-    this.y = y;
-    this.content = content;
-  }
-
-  display(ctx: CanvasRenderingContext2D) {
-    ctx.font = "30px Arial";
-    ctx.fillText(this.content, this.x, this.y);
-  }
-}
-
 canvas.addEventListener("mousedown", start);
 canvas.addEventListener("mousemove", draw);
 canvas.addEventListener("mouseup", stopdraw);
@@ -131,7 +120,7 @@ canvas.addEventListener("mouseout", enablecursor);
 canvas.addEventListener("mousemove", unablecursor);
 
 // diplay cursor when mouse out canvas
-function enablecursor(e: MouseEvent) {
+function enablecursor() {
   document.body.style.cursor = "auto";
 }
 
@@ -154,7 +143,7 @@ function start(e: MouseEvent) {
     canvas.dispatchEvent(new Event("drawing-changed"));
   } else {
     cursor.active = true;
-    let color = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
     currentline = new MarkerLine(e.offsetX, e.offsetY, linewidth, color);
     if (ctx) {
       currentline.display(ctx);
@@ -172,17 +161,17 @@ function draw(e: MouseEvent) {
   } else {
     if (currentSticker) {
       redraw();
-      stickerPreview = new StickerPreview(e.offsetX, e.offsetY, currentSticker);
-      stickerPreview.display(ctx!);
+      toolPreview = new ToolPreview(e.offsetX, e.offsetY, currentSticker);
+      toolPreview.display(ctx!);
     } else {
       redraw();
-      toolPreview = new ToolPreview(e.offsetX, e.offsetY);
+      toolPreview = new ToolPreview(e.offsetX, e.offsetY, "");
       toolPreview.display(ctx!);
     }
   }
 }
 
-function stopdraw(e: MouseEvent) {
+function stopdraw() {
   if (cursor.active && currentline) {
     lines.push(currentline);
     currentline = null;
@@ -337,7 +326,7 @@ const addsticker = document.createElement("button");
 addsticker.innerHTML = "+";
 app.append(addsticker);
 addsticker.addEventListener("click", () => {
-  let newsticker = prompt("Please enter your new sticker");
+  const newsticker = prompt("Please enter your new sticker");
   if (newsticker != null && Stickerarray.includes(newsticker.trim())) { // check sticker exists or not
     alert("Sticker exists! Please enter another sticker");
   } else if (newsticker != null && newsticker.trim() !== "") { // push sticker into array and update button
@@ -350,8 +339,8 @@ addsticker.addEventListener("click", () => {
 
 //color value
 let hue: number = 0;
-let saturation: number = 100;
 let lightness: number = 0;
+const saturation: number = 100;
 
 const colorSlider = document.createElement("input");
 colorSlider.type = "range";
